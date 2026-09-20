@@ -247,6 +247,12 @@
             <p style="margin: 0; font-size: 0.9rem;">每天補充足夠水分並規律排便，有助於維持身體新陳代謝喔！</p>
         </div>
 
+        <!-- 僅保留喝水量趨勢圖 -->
+        <div class="chart-card" style="border-color: #90caf9;">
+            <h3 style="text-align: center; margin-top: 0; color: #0984e3; font-size: 1rem;">📊 每日喝水量趨勢圖</h3>
+            <canvas id="waterChart"></canvas>
+        </div>
+
         <form id="wp-form">
             <input type="hidden" id="wp-id">
             
@@ -266,7 +272,7 @@
                     <option value="0">0 次 (未解)</option>
                     <option value="1">1 次</option>
                     <option value="2">2 次</option>
-                    <option value="3次以上">3次以上</option>
+                    <option value="3">3次以上</option>
                 </select>
             </div>
 
@@ -311,6 +317,7 @@
         } else {
             document.querySelector('.nav-tabs button:nth-child(2)').classList.add('active');
             document.getElementById('water-poop-tab').classList.add('active');
+            updateWaterChart(); // 切換過去時重新整理水量圖表
         }
     }
 
@@ -462,6 +469,7 @@
     let wpRecords = JSON.parse(localStorage.getItem('wp_records')) || [];
     const wpForm = document.getElementById('wp-form');
     const wpHistoryContainer = document.getElementById('wp-history-container');
+    let waterChart = null;
 
     wpForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -489,7 +497,7 @@
             wpRecords.push(newRecord);
         }
 
-        wpRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+        wpRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
         localStorage.setItem('wp_records', JSON.stringify(wpRecords));
         
         wpForm.reset();
@@ -521,27 +529,74 @@
         }
     }
 
+    function updateWaterChart() {
+        const ctx = document.getElementById('waterChart').getContext('2d');
+        const chartData = [...wpRecords]
+            .filter(r => r.water)
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        const labels = chartData.map(r => r.date);
+        const waterData = chartData.map(r => parseFloat(r.water));
+
+        if (waterChart) waterChart.destroy();
+
+        waterChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '喝水量 (c.c.)',
+                    data: waterData,
+                    backgroundColor: 'rgba(9, 132, 227, 0.6)',
+                    borderColor: '#0984e3',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        suggestedMin: 0,
+                        suggestedMax: 3000,
+                        title: { display: true, text: 'c.c.' }
+                    }
+                }
+            }
+        });
+    }
+
     function renderWP() {
         wpHistoryContainer.innerHTML = '';
-        if (wpRecords.length === 0) {
+        const displayRecords = [...wpRecords].sort((a, b) => new Date(b.date) - new Date(b.date));
+
+        if (displayRecords.length === 0) {
             wpHistoryContainer.innerHTML = '<p style="text-align:center; color:#888;">尚無排便與喝水記錄</p>';
+            updateWaterChart();
             return;
         }
 
-        wpRecords.forEach(r => {
+        displayRecords.forEach(r => {
             const div = document.createElement('div');
             div.className = 'history-item';
             div.style.borderLeftColor = '#0984e3';
+            
+            // 轉換次數文字
+            let poopText = r.poopCount === '3' ? '3次以上' : `${r.poopCount} 次`;
+
             div.innerHTML = `
                 <strong>📅 ${r.date}</strong><br>
                 💧 喝水量: ${r.water ? r.water + ' c.c.' : '未記錄'}<br>
-                💩 排便次數: ${r.poopCount} | 型態: ${r.poopShape}<br>
+                💩 排便次數: ${poopText} | 型態: ${r.poopShape}<br>
                 ${r.note ? `<small>備註: ${r.note}</small>` : ''}
                 <button class="delete-btn" onclick="deleteWPRecord(${r.id})">刪除</button>
                 <button class="delete-btn" style="right: 60px; background: #0984e3;" onclick="editWPRecord(${r.id})">修改</button>
             `;
             wpHistoryContainer.appendChild(div);
         });
+
+        updateWaterChart();
     }
 
     // 初始化渲染
@@ -551,3 +606,4 @@
 
 </body>
 </html>
+
