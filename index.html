@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的貼心月經記錄 App</title>
+    <title>我的貼心健康管理 App</title>
     <!-- 引入 Chart.js 圖表庫 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -28,6 +28,37 @@
             border-radius: 16px;
             box-shadow: 0 4px 15px rgba(255, 107, 129, 0.15);
         }
+        /* 導覽列選單樣式 */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .nav-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: #ffe4e6;
+            color: #d63031;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .nav-tab.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 10px rgba(255, 107, 129, 0.3);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
         h1 {
             color: var(--primary-color);
             text-align: center;
@@ -83,7 +114,7 @@
             width: auto;
             margin-right: 5px;
         }
-        button {
+        button.submit-btn {
             background-color: var(--primary-color);
             color: white;
             border: none;
@@ -95,7 +126,7 @@
             cursor: pointer;
             transition: background 0.3s;
         }
-        button:hover {
+        button.submit-btn:hover {
             opacity: 0.9;
         }
         .history-list {
@@ -128,107 +159,185 @@
 <body>
 
 <div class="container">
-    <h1>🌸 我的經期小幫手</h1>
-    
-    <div class="card" id="status-card">
-        <h3>下次經期預測</h3>
-        <p id="prediction-text">記錄幾次生理期後，這裡將為您精準預測</p>
+    <h1>🌸 我的貼心健康管理 App</h1>
+
+    <!-- 功能頁面切換選單 -->
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="switchTab('period')">🌸 月經與體溫</button>
+        <button class="nav-tab" onclick="switchTab('water-poop')">💧 排便與喝水</button>
     </div>
 
-    <!-- 體溫趨勢圖表區塊 -->
-    <div class="chart-card">
-        <h3 style="text-align: center; margin-top: 0; color: #ff6b81; font-size: 1rem;">📈 基礎體溫趨勢圖</h3>
-        <canvas id="tempChart"></canvas>
-    </div>
-
-    <form id="period-form">
-        <input type="hidden" id="record-id">
-        
-        <div class="form-group">
-            <label for="record-date">記錄日期</label>
-            <input type="date" id="record-date" required>
+    <!-- ================= 頁面一：月經與體溫紀錄 ================= -->
+    <div id="period-tab" class="tab-content active">
+        <div class="card" id="status-card">
+            <h3>下次經期預測</h3>
+            <p id="prediction-text">記錄幾次生理期後，這裡將為您精準預測</p>
         </div>
 
-        <div class="form-group">
-            <label for="temperature">基礎體溫 (°C)</label>
-            <input type="number" id="temperature" step="0.01" min="35.0" max="42.0" placeholder="例如: 36.50">
+        <div class="chart-card">
+            <h3 style="text-align: center; margin-top: 0; color: #ff6b81; font-size: 1rem;">📈 基礎體溫趨勢圖</h3>
+            <canvas id="tempChart"></canvas>
         </div>
 
-        <div class="form-group">
-            <label for="flow">經血量</label>
-            <select id="flow">
-                <option value="無">無 / 結束</option>
-                <option value="點狀出血">點狀出血 (Spotting)</option>
-                <option value="量少">量少</option>
-                <option value="量中">量中</option>
-                <option value="量多">量多 🌊</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>身體症狀 (可複選)</label>
-            <div class="checkbox-group">
-                <label><input type="checkbox" name="symptom" value="腹痛"> 腹痛</label>
-                <label><input type="checkbox" name="symptom" value="頭痛"> 頭痛</label>
-                <label><input type="checkbox" name="symptom" value="腰痠"> 腰痠</label>
-                <label><input type="checkbox" name="symptom" value="胸脹"> 胸脹</label>
-                <label><input type="checkbox" name="symptom" value="疲勞"> 疲勞</label>
-                <label><input type="checkbox" name="symptom" value="青春痘"> 青春痘</label>
+        <form id="period-form">
+            <input type="hidden" id="period-id">
+            
+            <div class="form-group">
+                <label for="period-date">記錄日期</label>
+                <input type="date" id="period-date" required>
             </div>
+
+            <div class="form-group">
+                <label for="temperature">基礎體溫 (°C)</label>
+                <input type="number" id="temperature" step="0.01" min="35.0" max="42.0" placeholder="例如: 36.50">
+            </div>
+
+            <div class="form-group">
+                <label for="flow">經血量</label>
+                <select id="flow">
+                    <option value="無">無 / 結束</option>
+                    <option value="點狀出血">點狀出血 (Spotting)</option>
+                    <option value="量少">量少</option>
+                    <option value="量中">量中</option>
+                    <option value="量多">量多 🌊</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>身體症狀 (可複選)</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="symptom" value="腹痛"> 腹痛</label>
+                    <label><input type="checkbox" name="symptom" value="頭痛"> 頭痛</label>
+                    <label><input type="checkbox" name="symptom" value="腰痠"> 腰痠</label>
+                    <label><input type="checkbox" name="symptom" value="胸脹"> 胸脹</label>
+                    <label><input type="checkbox" name="symptom" value="疲勞"> 疲勞</label>
+                    <label><input type="checkbox" name="symptom" value="青春痘"> 青春痘</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="mood">心情狀態</label>
+                <select id="mood">
+                    <option value="平靜 😊">平靜 😊</option>
+                    <option value="煩躁 😤">煩躁 😤</option>
+                    <option value="憂鬱 💧">憂鬱 💧</option>
+                    <option value="疲憊 😴">疲憊 😴</option>
+                    <option value="開心 🥳">開心 🥳</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="period-note">備註</label>
+                <textarea id="period-note" rows="2" placeholder="寫點筆記..."></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn" id="period-submit-btn">儲存月經紀錄</button>
+        </form>
+
+        <div class="history-list">
+            <h3>月經歷史紀錄</h3>
+            <div id="period-history-container"></div>
+        </div>
+    </div>
+
+    <!-- ================= 頁面二：排便與喝水紀錄 ================= -->
+    <div id="water-poop-tab" class="tab-content">
+        <div class="card" style="background: #e3f2fd; color: #0d47a1;">
+            <h3>💡 健康小提示</h3>
+            <p style="margin: 0; font-size: 0.9rem;">每天補充足夠水分並規律排便，有助於維持身體新陳代謝喔！</p>
         </div>
 
-        <div class="form-group">
-            <label for="mood">心情狀態</label>
-            <select id="mood">
-                <option value="平靜 😊">平靜 😊</option>
-                <option value="煩躁 😤">煩躁 😤</option>
-                <option value="憂鬱 💧">憂鬱 💧</option>
-                <option value="疲憊 😴">疲憊 😴</option>
-                <option value="開心 🥳">開心 🥳</option>
-            </select>
+        <form id="wp-form">
+            <input type="hidden" id="wp-id">
+            
+            <div class="form-group">
+                <label for="wp-date">記錄日期</label>
+                <input type="date" id="wp-date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="water">喝水量 (c.c.)</label>
+                <input type="number" id="water" step="100" min="0" max="10000" placeholder="例如: 2000">
+            </div>
+
+            <div class="form-group">
+                <label for="poop-count">排便次數</label>
+                <select id="poop-count">
+                    <option value="0">0 次 (未解)</option>
+                    <option value="1">1 次</option>
+                    <option value="2">2 次</option>
+                    <option value="3次以上">3次以上</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="poop-shape">大便型態 (Bristol 分型參考)</label>
+                <select id="poop-shape">
+                    <option value="正常成形 🍌">正常成形 🍌</option>
+                    <option value="硬顆粒狀 (便秘) 🪨">硬顆粒狀 (便秘) 🪨</option>
+                    <option value="偏軟/糊狀 🍦">偏軟/糊狀 🍦</option>
+                    <option value="水狀 (腹瀉) 🌊">水狀 (腹瀉) 🌊</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="wp-note">備註</label>
+                <textarea id="wp-note" rows="2" placeholder="飲食狀況或其他備註..."></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn" style="background-color: #0984e3;" id="wp-submit-btn">儲存排便與喝水紀錄</button>
+        </form>
+
+        <div class="history-list">
+            <h3>排便與喝水歷史紀錄</h3>
+            <div id="wp-history-container"></div>
         </div>
-
-        <div class="form-group">
-            <label for="note">備註</label>
-            <textarea id="note" rows="2" placeholder="寫點筆記..."></textarea>
-        </div>
-
-        <button type="submit" id="submit-btn">儲存紀錄</button>
-    </form>
-
-    <div class="history-list">
-        <h3>歷史紀錄</h3>
-        <div id="history-container"></div>
     </div>
 </div>
 
 <script>
-    document.getElementById('record-date').valueAsDate = new Date();
-    
-    let records = JSON.parse(localStorage.getItem('period_records')) || [];
+    // 初始化日期
+    document.getElementById('period-date').valueAsDate = new Date();
+    document.getElementById('wp-date').valueAsDate = new Date();
 
-    const form = document.getElementById('period-form');
-    const historyContainer = document.getElementById('history-container');
+    // 切換分頁功能
+    function switchTab(tabName) {
+        document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+
+        if (tabName === 'period') {
+            document.querySelector('.nav-tabs button:nth-child(1)').classList.add('active');
+            document.getElementById('period-tab').classList.add('active');
+        } else {
+            document.querySelector('.nav-tabs button:nth-child(2)').classList.add('active');
+            document.getElementById('water-poop-tab').classList.add('active');
+        }
+    }
+
+    // ================= 1. 月經與體溫邏輯 =================
+    let periodRecords = JSON.parse(localStorage.getItem('period_records')) || [];
+    const periodForm = document.getElementById('period-form');
+    const periodHistoryContainer = document.getElementById('period-history-container');
     const predictionText = document.getElementById('prediction-text');
     let tempChart = null;
 
-    form.addEventListener('submit', function(e) {
+    periodForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const id = document.getElementById('record-id').value;
-        const date = document.getElementById('record-date').value;
+        const id = document.getElementById('period-id').value;
+        const date = document.getElementById('period-date').value;
         const temperature = document.getElementById('temperature').value;
         const flow = document.getElementById('flow').value;
         const mood = document.getElementById('mood').value;
-        const note = document.getElementById('note').value;
+        const note = document.getElementById('period-note').value;
         
         const symptoms = Array.from(document.querySelectorAll('input[name="symptom"]:checked'))
                             .map(cb => cb.value);
 
         if (id) {
-            records = records.map(r => r.id == id ? { id: Number(id), date, temperature, flow, symptoms, mood, note } : r);
-            document.getElementById('record-id').value = '';
-            document.getElementById('submit-btn').textContent = '儲存紀錄';
+            periodRecords = periodRecords.map(r => r.id == id ? { id: Number(id), date, temperature, flow, symptoms, mood, note } : r);
+            document.getElementById('period-id').value = '';
+            document.getElementById('period-submit-btn').textContent = '儲存月經紀錄';
         } else {
             const newRecord = {
                 id: Date.now(),
@@ -239,59 +348,55 @@
                 mood,
                 note
             };
-            records.push(newRecord);
+            periodRecords.push(newRecord);
         }
 
-        // 依日期排序（繪圖需要由舊到新）
-        records.sort((a, b) => new Date(a.date) - new Date(b.date));
-        localStorage.setItem('period_records', JSON.stringify(records));
+        periodRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
+        localStorage.setItem('period_records', JSON.stringify(periodRecords));
         
-        form.reset();
-        document.getElementById('record-date').valueAsDate = new Date();
-        render();
+        periodForm.reset();
+        document.getElementById('period-date').valueAsDate = new Date();
+        renderPeriod();
     });
 
-    function deleteRecord(id) {
-        if(confirm('確定要刪除這筆紀錄嗎？')) {
-            records = records.filter(r => r.id !== id);
-            localStorage.setItem('period_records', JSON.stringify(records));
-            render();
+    function deletePeriodRecord(id) {
+        if(confirm('確定要刪除這筆月經紀錄嗎？')) {
+            periodRecords = periodRecords.filter(r => r.id !== id);
+            localStorage.setItem('period_records', JSON.stringify(periodRecords));
+            renderPeriod();
         }
     }
 
-    function editRecord(id) {
-        const record = records.find(r => r.id === id);
+    function editPeriodRecord(id) {
+        const record = periodRecords.find(r => r.id === id);
         if (record) {
-            document.getElementById('record-id').value = record.id;
-            document.getElementById('record-date').value = record.date;
+            document.getElementById('period-id').value = record.id;
+            document.getElementById('period-date').value = record.date;
             document.getElementById('temperature').value = record.temperature || '';
             document.getElementById('flow').value = record.flow;
             document.getElementById('mood').value = record.mood;
-            document.getElementById('note').value = record.note || '';
+            document.getElementById('period-note').value = record.note || '';
             
             document.querySelectorAll('input[name="symptom"]').forEach(cb => {
                 cb.checked = record.symptoms && record.symptoms.includes(cb.value);
             });
 
-            document.getElementById('submit-btn').textContent = '修改紀錄';
+            document.getElementById('period-submit-btn').textContent = '修改月經紀錄';
+            switchTab('period');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
     function updateChart() {
         const ctx = document.getElementById('tempChart').getContext('2d');
-        
-        // 篩選出有填寫體溫的資料並按日期由舊到新排序
-        const chartData = [...records]
+        const chartData = [...periodRecords]
             .filter(r => r.temperature)
             .sort((a, b) => new Date(a.date) - new Date(b.date));
 
         const labels = chartData.map(r => r.date);
         const data = chartData.map(r => parseFloat(r.temperature));
 
-        if (tempChart) {
-            tempChart.destroy();
-        }
+        if (tempChart) tempChart.destroy();
 
         tempChart = new Chart(ctx, {
             type: 'line',
@@ -311,29 +416,18 @@
             },
             options: {
                 responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        suggestedMin: 35.5,
-                        suggestedMax: 37.5
-                    }
-                }
+                plugins: { legend: { display: false } },
+                scales: { y: { suggestedMin: 35.5, suggestedMax: 37.5 } }
             }
         });
     }
 
-    function render() {
-        historyContainer.innerHTML = '';
-        
-        // 為了歷史紀錄顯示，將其反轉（最新在最上面）
-        const displayRecords = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
+    function renderPeriod() {
+        periodHistoryContainer.innerHTML = '';
+        const displayRecords = [...periodRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
 
         if (displayRecords.length === 0) {
-            historyContainer.innerHTML = '<p style="text-align:center; color:#888;">尚無記錄</p>';
+            periodHistoryContainer.innerHTML = '<p style="text-align:center; color:#888;">尚無月經記錄</p>';
             predictionText.textContent = '記錄幾次生理期後，這裡將為您精準預測';
             updateChart();
             return;
@@ -347,13 +441,12 @@
                 經量: ${r.flow} | 心情: ${r.mood}<br>
                 <small>症狀: ${r.symptoms && r.symptoms.length > 0 ? r.symptoms.join(', ') : '無'}</small><br>
                 ${r.note ? `<small>備註: ${r.note}</small>` : ''}
-                <button class="delete-btn" onclick="deleteRecord(${r.id})">刪除</button>
-                <button class="delete-btn" style="right: 60px; background: #0984e3;" onclick="editRecord(${r.id})">修改</button>
+                <button class="delete-btn" onclick="deletePeriodRecord(${r.id})">刪除</button>
+                <button class="delete-btn" style="right: 60px; background: #0984e3;" onclick="editPeriodRecord(${r.id})">修改</button>
             `;
-            historyContainer.appendChild(div);
+            periodHistoryContainer.appendChild(div);
         });
 
-        // 預測邏輯
         const heavyRecords = displayRecords.filter(r => r.flow === '量多');
         if (heavyRecords.length >= 1) {
             const lastDate = new Date(heavyRecords[0].date);
@@ -364,7 +457,96 @@
         updateChart();
     }
 
-    render();
+
+    // ================= 2. 排便與喝水邏輯 =================
+    let wpRecords = JSON.parse(localStorage.getItem('wp_records')) || [];
+    const wpForm = document.getElementById('wp-form');
+    const wpHistoryContainer = document.getElementById('wp-history-container');
+
+    wpForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const id = document.getElementById('wp-id').value;
+        const date = document.getElementById('wp-date').value;
+        const water = document.getElementById('water').value;
+        const poopCount = document.getElementById('poop-count').value;
+        const poopShape = document.getElementById('poop-shape').value;
+        const note = document.getElementById('wp-note').value;
+
+        if (id) {
+            wpRecords = wpRecords.map(r => r.id == id ? { id: Number(id), date, water, poopCount, poopShape, note } : r);
+            document.getElementById('wp-id').value = '';
+            document.getElementById('wp-submit-btn').textContent = '儲存排便與喝水紀錄';
+        } else {
+            const newRecord = {
+                id: Date.now(),
+                date,
+                water,
+                poopCount,
+                poopShape,
+                note
+            };
+            wpRecords.push(newRecord);
+        }
+
+        wpRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+        localStorage.setItem('wp_records', JSON.stringify(wpRecords));
+        
+        wpForm.reset();
+        document.getElementById('wp-date').valueAsDate = new Date();
+        renderWP();
+    });
+
+    function deleteWPRecord(id) {
+        if(confirm('確定要刪除這筆紀錄嗎？')) {
+            wpRecords = wpRecords.filter(r => r.id !== id);
+            localStorage.setItem('wp_records', JSON.stringify(wpRecords));
+            renderWP();
+        }
+    }
+
+    function editWPRecord(id) {
+        const record = wpRecords.find(r => r.id === id);
+        if (record) {
+            document.getElementById('wp-id').value = record.id;
+            document.getElementById('wp-date').value = record.date;
+            document.getElementById('water').value = record.water || '';
+            document.getElementById('poop-count').value = record.poopCount;
+            document.getElementById('poop-shape').value = record.poopShape;
+            document.getElementById('wp-note').value = record.note || '';
+
+            document.getElementById('wp-submit-btn').textContent = '修改排便與喝水紀錄';
+            switchTab('water-poop');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    function renderWP() {
+        wpHistoryContainer.innerHTML = '';
+        if (wpRecords.length === 0) {
+            wpHistoryContainer.innerHTML = '<p style="text-align:center; color:#888;">尚無排便與喝水記錄</p>';
+            return;
+        }
+
+        wpRecords.forEach(r => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.style.borderLeftColor = '#0984e3';
+            div.innerHTML = `
+                <strong>📅 ${r.date}</strong><br>
+                💧 喝水量: ${r.water ? r.water + ' c.c.' : '未記錄'}<br>
+                💩 排便次數: ${r.poopCount} | 型態: ${r.poopShape}<br>
+                ${r.note ? `<small>備註: ${r.note}</small>` : ''}
+                <button class="delete-btn" onclick="deleteWPRecord(${r.id})">刪除</button>
+                <button class="delete-btn" style="right: 60px; background: #0984e3;" onclick="editWPRecord(${r.id})">修改</button>
+            `;
+            wpHistoryContainer.appendChild(div);
+        });
+    }
+
+    // 初始化渲染
+    renderPeriod();
+    renderWP();
 </script>
 
 </body>
