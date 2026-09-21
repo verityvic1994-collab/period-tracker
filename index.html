@@ -91,10 +91,18 @@
         input, select, textarea {
             width: 100%;
             padding: 10px;
+            padding-right: 35px; 
             border: 1px solid #ddd;
             border-radius: 8px;
             box-sizing: border-box;
             font-size: 1rem;
+            appearance: none; 
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.362%22%20height%3D%22292.362%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.6%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 12px;
         }
         .checkbox-group {
             display: flex;
@@ -247,7 +255,6 @@
             <p style="margin: 0; font-size: 0.9rem;">每天補充足夠水分並規律排便，有助於維持身體新陳代謝喔！</p>
         </div>
 
-        <!-- 僅保留喝水量趨勢圖 -->
         <div class="chart-card" style="border-color: #90caf9;">
             <h3 style="text-align: center; margin-top: 0; color: #0984e3; font-size: 1rem;">📊 每日喝水量趨勢圖</h3>
             <canvas id="waterChart"></canvas>
@@ -268,7 +275,7 @@
 
             <div class="form-group">
                 <label for="poop-count">排便次數</label>
-                <select id="poop-count">
+                <select id="poop-count" onchange="togglePoopShape()">
                     <option value="0">0 次 (未解)</option>
                     <option value="1">1 次</option>
                     <option value="2">2 次</option>
@@ -276,7 +283,8 @@
                 </select>
             </div>
 
-            <div class="form-group">
+            <!-- 大便型態群組 (當選0次時會自動隱藏) -->
+            <div class="form-group" id="poop-shape-group">
                 <label for="poop-shape">大便型態 (Bristol 分型參考)</label>
                 <select id="poop-shape">
                     <option value="正常成形 🍌">正常成形 🍌</option>
@@ -302,11 +310,9 @@
 </div>
 
 <script>
-    // 初始化日期
     document.getElementById('period-date').valueAsDate = new Date();
     document.getElementById('wp-date').valueAsDate = new Date();
 
-    // 切換分頁功能
     function switchTab(tabName) {
         document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -317,7 +323,18 @@
         } else {
             document.querySelector('.nav-tabs button:nth-child(2)').classList.add('active');
             document.getElementById('water-poop-tab').classList.add('active');
-            updateWaterChart(); // 切換過去時重新整理水量圖表
+            updateWaterChart();
+        }
+    }
+
+    // 控制「大便型態」選單的顯示與隱藏
+    function togglePoopShape() {
+        const count = document.getElementById('poop-count').value;
+        const shapeGroup = document.getElementById('poop-shape-group');
+        if (count === '0') {
+            shapeGroup.style.display = 'none';
+        } else {
+            shapeGroup.style.display = 'block';
         }
     }
 
@@ -478,7 +495,8 @@
         const date = document.getElementById('wp-date').value;
         const water = document.getElementById('water').value;
         const poopCount = document.getElementById('poop-count').value;
-        const poopShape = document.getElementById('poop-shape').value;
+        // 如果是 0 次，型態直接記錄為無
+        const poopShape = poopCount === '0' ? '無' : document.getElementById('poop-shape').value;
         const note = document.getElementById('wp-note').value;
 
         if (id) {
@@ -502,6 +520,7 @@
         
         wpForm.reset();
         document.getElementById('wp-date').valueAsDate = new Date();
+        togglePoopShape(); // 重置選單顯示狀態
         renderWP();
     });
 
@@ -520,7 +539,12 @@
             document.getElementById('wp-date').value = record.date;
             document.getElementById('water').value = record.water || '';
             document.getElementById('poop-count').value = record.poopCount;
-            document.getElementById('poop-shape').value = record.poopShape;
+            
+            togglePoopShape(); // 依據次數決定是否顯示型態選單
+            if (record.poopCount !== '0') {
+                document.getElementById('poop-shape').value = record.poopShape;
+            }
+
             document.getElementById('wp-note').value = record.note || '';
 
             document.getElementById('wp-submit-btn').textContent = '修改排便與喝水紀錄';
@@ -569,7 +593,7 @@
 
     function renderWP() {
         wpHistoryContainer.innerHTML = '';
-        const displayRecords = [...wpRecords].sort((a, b) => new Date(b.date) - new Date(b.date));
+        const displayRecords = [...wpRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
 
         if (displayRecords.length === 0) {
             wpHistoryContainer.innerHTML = '<p style="text-align:center; color:#888;">尚無排便與喝水記錄</p>';
@@ -582,13 +606,13 @@
             div.className = 'history-item';
             div.style.borderLeftColor = '#0984e3';
             
-            // 轉換次數文字
             let poopText = r.poopCount === '3' ? '3次以上' : `${r.poopCount} 次`;
+            let poopDetail = r.poopCount === '0' ? '' : ` | 型態: ${r.poopShape}`;
 
             div.innerHTML = `
                 <strong>📅 ${r.date}</strong><br>
                 💧 喝水量: ${r.water ? r.water + ' c.c.' : '未記錄'}<br>
-                💩 排便次數: ${poopText} | 型態: ${r.poopShape}<br>
+                💩 排便次數: ${poopText}${poopDetail}<br>
                 ${r.note ? `<small>備註: ${r.note}</small>` : ''}
                 <button class="delete-btn" onclick="deleteWPRecord(${r.id})">刪除</button>
                 <button class="delete-btn" style="right: 60px; background: #0984e3;" onclick="editWPRecord(${r.id})">修改</button>
@@ -599,11 +623,11 @@
         updateWaterChart();
     }
 
-    // 初始化渲染
+    // 初始化執行
+    togglePoopShape();
     renderPeriod();
     renderWP();
 </script>
 
 </body>
 </html>
-
