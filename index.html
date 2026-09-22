@@ -88,15 +88,21 @@
             margin-bottom: 5px;
             font-size: 0.9rem;
         }
+
+        /* 恢復原本月經頁面乾淨的 input, select, textarea 樣式 */
         input, select, textarea {
             width: 100%;
             padding: 10px;
-            padding-right: 35px; 
             border: 1px solid #ddd;
             border-radius: 8px;
             box-sizing: border-box;
             font-size: 1rem;
-            appearance: none; 
+        }
+
+        /* 專門給排便頁面下拉選單的樣式（帶右側 padding 避免 emoji 被箭頭覆蓋） */
+        #water-poop-tab select {
+            padding-right: 35px;
+            appearance: none;
             -webkit-appearance: none;
             -moz-appearance: none;
             background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.362%22%20height%3D%22292.362%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.6%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
@@ -104,6 +110,7 @@
             background-position: right 10px center;
             background-size: 12px;
         }
+
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
@@ -283,7 +290,6 @@
                 </select>
             </div>
 
-            <!-- 大便型態群組 (當選0次時會自動隱藏) -->
             <div class="form-group" id="poop-shape-group">
                 <label for="poop-shape">大便型態 (Bristol 分型參考)</label>
                 <select id="poop-shape">
@@ -327,7 +333,6 @@
         }
     }
 
-    // 控制「大便型態」選單的顯示與隱藏
     function togglePoopShape() {
         const count = document.getElementById('poop-count').value;
         const shapeGroup = document.getElementById('poop-shape-group');
@@ -495,7 +500,6 @@
         const date = document.getElementById('wp-date').value;
         const water = document.getElementById('water').value;
         const poopCount = document.getElementById('poop-count').value;
-        // 如果是 0 次，型態直接記錄為無
         const poopShape = poopCount === '0' ? '無' : document.getElementById('poop-shape').value;
         const note = document.getElementById('wp-note').value;
 
@@ -520,7 +524,7 @@
         
         wpForm.reset();
         document.getElementById('wp-date').valueAsDate = new Date();
-        togglePoopShape(); // 重置選單顯示狀態
+        togglePoopShape();
         renderWP();
     });
 
@@ -540,7 +544,7 @@
             document.getElementById('water').value = record.water || '';
             document.getElementById('poop-count').value = record.poopCount;
             
-            togglePoopShape(); // 依據次數決定是否顯示型態選單
+            togglePoopShape();
             if (record.poopCount !== '0') {
                 document.getElementById('poop-shape').value = record.poopShape;
             }
@@ -623,7 +627,6 @@
         updateWaterChart();
     }
 
-    // 初始化執行
     togglePoopShape();
     renderPeriod();
     renderWP();
@@ -631,3 +634,4 @@
 
 </body>
 </html>
+
