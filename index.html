@@ -12,6 +12,9 @@
             --secondary-color: #ffe4e6;
             --bg-color: #fff5f7;
             --text-color: #333;
+            /* 新增顏色變數 */
+            --sex-border-color: #ff7979; /* 性行為邊框顏色 (粉紅) */
+            --period-end-border-color: #3498db; /* 月經結束邊框顏色 (藍) */
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -99,7 +102,7 @@
             font-size: 1rem;
         }
 
-        /* 專門給排便頁面下拉選單的樣式（帶右側 padding 避免 emoji 被箭頭覆蓋） */
+        /* 專門給排便頁面下拉選單的樣式 */
         #water-poop-tab select {
             padding-right: 35px;
             appearance: none;
@@ -129,6 +132,51 @@
             width: auto;
             margin-right: 5px;
         }
+
+        /* 新增性行為開關樣式 */
+        .switch-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .switch-group label {
+            margin: 0;
+        }
+        .switch-label {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch-label input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px; width: 16px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
         button.submit-btn {
             background-color: var(--primary-color);
             color: white;
@@ -156,6 +204,20 @@
             font-size: 0.9rem;
             position: relative;
         }
+        /* 新增彩色邊框樣式類別 */
+        .history-item.has-sex {
+            border-right: 4px solid var(--sex-border-color);
+            padding-right: 16px; /* 避免內容被邊框蓋住 */
+        }
+        .history-item.period-end {
+            border-right: 4px solid var(--period-end-border-color);
+            padding-right: 16px; /* 避免內容被邊框蓋住 */
+        }
+        /* 當同時符合時，優先顯示月經結束的藍框，或者你可以選擇讓藍框覆蓋，這裡示範讓藍框優先 */
+        .history-item.has-sex.period-end {
+            border-right: 4px solid var(--period-end-border-color);
+        }
+
         .history-item button.delete-btn {
             position: absolute;
             right: 10px;
@@ -216,6 +278,18 @@
                     <option value="量中">量中</option>
                     <option value="量多">量多 🌊</option>
                 </select>
+            </div>
+
+            <!-- 新增性行為選項 (使用開關樣式) -->
+            <div class="form-group">
+                <label>性行為</label>
+                <div class="switch-group">
+                    <label for="has-sex">當日是否有性行為？</label>
+                    <label class="switch-label">
+                        <input type="checkbox" id="has-sex">
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </div>
 
             <div class="form-group">
@@ -357,22 +431,27 @@
         const date = document.getElementById('period-date').value;
         const temperature = document.getElementById('temperature').value;
         const flow = document.getElementById('flow').value;
-        const mood = document.getElementById('mood').value;
         const note = document.getElementById('period-note').value;
+        // 新增：取得性行為狀態
+        const hasSex = document.getElementById('has-sex').checked;
+        const mood = document.getElementById('mood').value;
         
         const symptoms = Array.from(document.querySelectorAll('input[name="symptom"]:checked'))
                             .map(cb => cb.value);
 
         if (id) {
-            periodRecords = periodRecords.map(r => r.id == id ? { id: Number(id), date, temperature, flow, symptoms, mood, note } : r);
+            // 修改時更新物件
+            periodRecords = periodRecords.map(r => r.id == id ? { id: Number(id), date, temperature, flow, hasSex, symptoms, mood, note } : r);
             document.getElementById('period-id').value = '';
             document.getElementById('period-submit-btn').textContent = '儲存月經紀錄';
         } else {
+            // 新增物件
             const newRecord = {
                 id: Date.now(),
                 date,
                 temperature,
                 flow,
+                hasSex, // 新增：儲存性行為
                 symptoms,
                 mood,
                 note
@@ -403,6 +482,8 @@
             document.getElementById('period-date').value = record.date;
             document.getElementById('temperature').value = record.temperature || '';
             document.getElementById('flow').value = record.flow;
+            // 新增：設定性行為開關狀態
+            document.getElementById('has-sex').checked = record.hasSex || false;
             document.getElementById('mood').value = record.mood;
             document.getElementById('period-note').value = record.note || '';
             
@@ -465,6 +546,16 @@
         displayRecords.forEach(r => {
             const div = document.createElement('div');
             div.className = 'history-item';
+            
+            // 新增：判斷是否需要加上彩色邊框樣式
+            if (r.flow === '無') {
+                div.classList.add('period-end');
+            }
+            // 若兩者同時存在，優先加上 period-end (後加的 CSS 樣式會覆蓋)，或者你在 CSS 調整優先級
+            if (r.hasSex === true) {
+                div.classList.add('has-sex');
+            }
+
             div.innerHTML = `
                 <strong>📅 ${r.date}</strong> ${r.temperature ? `| 🌡️ ${r.temperature}°C` : ''}<br>
                 經量: ${r.flow} | 心情: ${r.mood}<br>
@@ -634,4 +725,3 @@
 
 </body>
 </html>
-
