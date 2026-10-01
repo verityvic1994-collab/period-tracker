@@ -576,7 +576,145 @@
     }
 
     // ================= 2. 排便與喝水邏輯 =================
-    // (略過未修改)
+    let wpRecords = JSON.parse(localStorage.getItem('wp_records')) || [];
+    const wpForm = document.getElementById('wp-form');
+    const wpHistoryContainer = document.getElementById('wp-history-container');
+    let waterChart = null;
+
+    wpForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const id = document.getElementById('wp-id').value;
+        const date = document.getElementById('wp-date').value;
+        const water = document.getElementById('water').value;
+        const poopCount = document.getElementById('poop-count').value;
+        const poopShape = poopCount === '0' ? '無' : document.getElementById('poop-shape').value;
+        const note = document.getElementById('wp-note').value;
+
+        if (id) {
+            wpRecords = wpRecords.map(r => r.id == id ? { id: Number(id), date, water, poopCount, poopShape, note } : r);
+            document.getElementById('wp-id').value = '';
+            document.getElementById('wp-submit-btn').textContent = '儲存排便與喝水紀錄';
+        } else {
+            const newRecord = {
+                id: Date.now(),
+                date,
+                water,
+                poopCount,
+                poopShape,
+                note
+            };
+            wpRecords.push(newRecord);
+        }
+
+        wpRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
+        localStorage.setItem('wp_records', JSON.stringify(wpRecords));
+        
+        wpForm.reset();
+        document.getElementById('wp-date').valueAsDate = new Date();
+        togglePoopShape();
+        renderWP();
+    });
+
+    function deleteWPRecord(id) {
+        if(confirm('確定要刪除這筆紀錄嗎？')) {
+            wpRecords = wpRecords.filter(r => r.id !== id);
+            localStorage.setItem('wp_records', JSON.stringify(wpRecords));
+            renderWP();
+        }
+    }
+
+    function editWPRecord(id) {
+        const record = wpRecords.find(r => r.id === id);
+        if (record) {
+            document.getElementById('wp-id').value = record.id;
+            document.getElementById('wp-date').value = record.date;
+            document.getElementById('water').value = record.water || '';
+            document.getElementById('poop-count').value = record.poopCount;
+            
+            togglePoopShape();
+            if (record.poopCount !== '0') {
+                document.getElementById('poop-shape').value = record.poopShape;
+            }
+
+            document.getElementById('wp-note').value = record.note || '';
+
+            document.getElementById('wp-submit-btn').textContent = '修改排便與喝水紀錄';
+            switchTab('water-poop');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    function updateWaterChart() {
+        const ctx = document.getElementById('waterChart').getContext('2d');
+        const chartData = [...wpRecords]
+            .filter(r => r.water)
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        const labels = chartData.map(r => r.date);
+        const waterData = chartData.map(r => parseFloat(r.water));
+
+        if (waterChart) waterChart.destroy();
+
+        waterChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '喝水量 (c.c.)',
+                    data: waterData,
+                    backgroundColor: 'rgba(9, 132, 227, 0.6)',
+                    borderColor: '#0984e3',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        suggestedMin: 0,
+                        suggestedMax: 3000,
+                        title: { display: true, text: 'c.c.' }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderWP() {
+        wpHistoryContainer.innerHTML = '';
+        const displayRecords = [...wpRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        if (displayRecords.length === 0) {
+            wpHistoryContainer.innerHTML = '<p style="text-align:center; color:#888;">尚無排便與喝水記錄</p>';
+            updateWaterChart();
+            return;
+        }
+
+        displayRecords.forEach(r => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.style.borderLeftColor = '#0984e3';
+            
+            let poopText = r.poopCount === '3' ? '3次以上' : `${r.poopCount} 次`;
+            let poopDetail = r.poopCount === '0' ? '' : ` | 型態: ${r.poopShape}`;
+
+            div.innerHTML = `
+                <strong>📅 ${r.date}</strong><br>
+                💧 喝水量: ${r.water ? r.water + ' c.c.' : '未記錄'}<br>
+                💩 排便次數: ${poopText}${poopDetail}<br>
+                ${r.note ? `<small>備註: ${r.note}</small>` : ''}
+                <button class="delete-btn" onclick="deleteWPRecord(${r.id})">刪除</button>
+                <button class="delete-btn" style="right: 60px; background: #0984e3;" onclick="editWPRecord(${r.id})">修改</button>
+            `;
+            wpHistoryContainer.appendChild(div);
+        });
+
+        updateWaterChart();
+    }
+
     togglePoopShape();
     renderPeriod();
     renderWP();
